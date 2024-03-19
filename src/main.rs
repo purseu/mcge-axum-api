@@ -4,6 +4,7 @@ use axum::{
     Json, Router,
 };
 use serde::{Deserialize, Serialize};
+use tracing::info;
 
 #[tokio::main]
 async fn main() {
@@ -18,7 +19,8 @@ async fn main() {
         .route("/users", post(create_user));
 
     // run our app with hyper, listening globally on port 3000
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:3000").await.unwrap();
+    info!("server listening on {}", listener.local_addr().unwrap());
     axum::serve(listener, app).await.unwrap();
 }
 
