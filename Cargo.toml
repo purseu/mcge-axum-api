@@ -17,3 +17,5 @@ tower = "0.4"
 sqlx = { version = "0.7", features = [ "runtime-tokio", "tls-rustls", "sqlite", "time" ] }
 dotenvy = "0.15"
 time = { version = "0.3.31", features = ["serde-human-readable"]}
+anyhow = "1.0.81"
+jsonwebtoken = "9"

@@ -1,10 +1,11 @@
 use axum::{extract::State, Json};
+use jsonwebtoken::{encode, EncodingKey, Header};
 use serde::{Deserialize, Serialize};
 use sqlx::{Pool, Sqlite};
 
-use crate::db::User;
+use crate::{api::jwt::Claims, db::User};
 
-use super::ApiError;
+use super::{jwt::AuthError, ApiError};
 
 
 #[derive(Deserialize)]
@@ -38,21 +39,25 @@ pub async fn login(
     let user: User = match user {
         Ok(user) => user,
         Err(sqlx::Error::RowNotFound) => {
-            let res = sqlx::query("insert into users (openid, session_key) values (?, ?)")
+            sqlx::query("insert into users (openid, session_key) values (?, ?)")
             .bind(&wx_user.openid)
             .bind(&wx_user.session_key)
             .execute(&pool)
-            .await;
+            .await?;
 
             sqlx::query_as::<_, User>("select * from users where openid = ?")
             .bind(&wx_user.openid)
             .fetch_one(&pool)
             .await?
         },
-        Err(e) => return Err(ApiError::Internal)
+        Err(e) => return Err(ApiError::from(e))
     };
 
-    Ok(Json(()))
+    let claims = Claims::new(user.id.to_string());
+    let token = encode(&Header::default(), &claims, &EncodingKey::from_secret(b"secret"))
+        .map_err(|_| AuthError::TokenCreation)?;
+
+    Ok(Json(AuthBody::new(token)))
 }
 
 #[derive(Deserialize, Default)]
