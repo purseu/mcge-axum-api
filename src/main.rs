@@ -1,9 +1,8 @@
 use axum::{
-    routing::{get, post},
+    routing::post,
     Router,
 };
 use dotenvy::dotenv;
-use serde::Serialize;
 use tower_http::trace::TraceLayer;
 use tracing::info;
 
